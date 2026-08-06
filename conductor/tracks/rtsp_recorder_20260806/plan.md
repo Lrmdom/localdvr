@@ -7,12 +7,12 @@
     - [x] Add `.env.example`
 - [x] Task: Conductor - User Manual Verification 'Setup & Configuration' (Protocol in workflow.md)
 
-## Phase 2: Core Service Implementation
+## Phase 2: Core Service Implementation [checkpoint: 5d4d25c]
 - [x] Task: Implement configuration management [95999e9]
     - [x] Create `src/config.py` using Pydantic
 - [x] Task: Implement RTSP recording logic [3fd6b01]
     - [x] Create `src/rtsp_recorder.py` for FFmpeg interaction
-- [ ] Task: Conductor - User Manual Verification 'Core Service Implementation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Core Service Implementation' (Protocol in workflow.md)
 
 ## Phase 3: Resilience & Upload Integration
 - [ ] Task: Implement R2 uploader
