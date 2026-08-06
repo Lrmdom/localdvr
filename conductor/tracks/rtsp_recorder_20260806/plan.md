@@ -14,12 +14,12 @@
     - [x] Create `src/rtsp_recorder.py` for FFmpeg interaction
 - [x] Task: Conductor - User Manual Verification 'Core Service Implementation' (Protocol in workflow.md)
 
-## Phase 3: Resilience & Upload Integration
+## Phase 3: Resilience & Upload Integration [checkpoint: 98fd00d]
 - [x] Task: Implement R2 uploader [8c653c9]
     - [x] Create `src/r2_uploader.py` using boto3
 - [x] Task: Implement main service entry point [55bab50]
     - [x] Create `main.py` to orchestrate recording, upload, and concurrency
-- [ ] Task: Conductor - User Manual Verification 'Resilience & Upload Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Resilience & Upload Integration' (Protocol in workflow.md)
 
 ## Phase 4: Containerization & Final Verification
 - [ ] Task: Add containerization
