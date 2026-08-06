@@ -8,10 +8,10 @@
 - [x] Task: Conductor - User Manual Verification 'Setup & Configuration' (Protocol in workflow.md)
 
 ## Phase 2: Core Service Implementation
-- [ ] Task: Implement configuration management
-    - [ ] Create `src/config.py` using Pydantic
-- [ ] Task: Implement RTSP recording logic
-    - [ ] Create `src/rtsp_recorder.py` for FFmpeg interaction
+- [x] Task: Implement configuration management [95999e9]
+    - [x] Create `src/config.py` using Pydantic
+- [~] Task: Implement RTSP recording logic
+    - [~] Create `src/rtsp_recorder.py` for FFmpeg interaction
 - [ ] Task: Conductor - User Manual Verification 'Core Service Implementation' (Protocol in workflow.md)
 
 ## Phase 3: Resilience & Upload Integration
