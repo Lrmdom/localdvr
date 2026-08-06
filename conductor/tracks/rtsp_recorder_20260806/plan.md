@@ -17,8 +17,8 @@
 ## Phase 3: Resilience & Upload Integration
 - [x] Task: Implement R2 uploader [8c653c9]
     - [x] Create `src/r2_uploader.py` using boto3
-- [~] Task: Implement main service entry point
-    - [~] Create `main.py` to orchestrate recording, upload, and concurrency
+- [x] Task: Implement main service entry point [55bab50]
+    - [x] Create `main.py` to orchestrate recording, upload, and concurrency
 - [ ] Task: Conductor - User Manual Verification 'Resilience & Upload Integration' (Protocol in workflow.md)
 
 ## Phase 4: Containerization & Final Verification
