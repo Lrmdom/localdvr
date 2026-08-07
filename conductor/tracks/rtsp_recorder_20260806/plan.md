@@ -22,9 +22,9 @@
 - [x] Task: Conductor - User Manual Verification 'Resilience & Upload Integration' (Protocol in workflow.md)
 
 ## Phase 4: Containerization & Final Verification
-- [ ] Task: Add containerization
-    - [ ] Create `Dockerfile`
-    - [ ] Create `docker-compose.yml`
-- [ ] Task: Final verification
-    - [ ] Test recording and uploading with local setup
+- [~] Task: Add containerization
+    - [~] Create `Dockerfile`
+    - [~] Create `docker-compose.yml`
+- [~] Task: Final verification
+    - [~] Test recording and uploading with local setup
 - [ ] Task: Conductor - User Manual Verification 'Containerization & Final Verification' (Protocol in workflow.md)
