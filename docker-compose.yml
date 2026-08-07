@@ -1,0 +1,13 @@
+services:
+  recorder:
+    build: .
+    container_name: localdvr-recorder
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - .env
+    volumes:
+      - temp_data:/app/temp
+
+volumes:
+  temp_data:
