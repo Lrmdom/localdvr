@@ -37,3 +37,5 @@ class Settings(BaseSettings):
             if cam_url:
                 return [CameraConfig(name=cam_name, rtsp_url=cam_url)]
             return []
+
+settings = Settings()
