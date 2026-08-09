@@ -1,0 +1,50 @@
+mqtt:
+  host: mqtt
+  port: 1883
+  topic_prefix: frigate
+  client_id: frigate
+
+detectors:
+  cpu1:
+    type: cpu
+
+objects:
+  track:
+    - person
+    - car
+    - dog
+    - cat
+
+record:
+  enabled: true
+  alerts:
+    retain:
+      days: 2
+  detections:
+    retain:
+      days: 2
+cameras:
+  tplink_exterior:
+    ffmpeg:
+      inputs:
+        - path: rtsp://Licass:Licassss5151@192.168.1.65:554/stream1
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      width: 1920 # Defaulting to common resolution, Frigate will warn if it mismatches
+      height: 1080
+
+  lsc_rotativa:
+    ffmpeg:
+      inputs:
+        - path: rtsp://CbFsCQhTp1:Licassss5151@192.168.1.72:554/live/ch0
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      width: 1920
+      height: 1080
+version: 0.17-0

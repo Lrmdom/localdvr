@@ -1,0 +1,6 @@
+# Configuração base go2rtc
+# Adicionar streams RTSP em 'streams'
+streams:
+  # camera_name: rtsp://user:pass@ip:port/path
+  # Exemplo:
+  lsc_rotativa: rtsp://CbFsCQhTp1:Licassss5151@192.168.1.72:554/live/ch0
