@@ -2,11 +2,14 @@ import asyncio
 import logging
 import signal
 import sys
+import threading
+import uvicorn
 from concurrent.futures import ThreadPoolExecutor
 
 from src.config import settings
 from src.r2_uploader import R2Uploader
 from src.frigate_listener import FrigateListener
+from src.api import app
 
 # Configuração de logs estruturados
 logging.basicConfig(
@@ -16,6 +19,10 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger("Main")
+
+def run_api():
+    logger.info("A iniciar o servidor API na porta 8000...")
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
 
 async def shutdown(loop, executor, listener):
     logger.info("A encerrar o serviço do Frigate Listener...")
@@ -29,6 +36,10 @@ async def shutdown(loop, executor, listener):
 
 def main():
     logger.info("A inicializar o LocalDVR como Frigate Uploader Orchestrator.")
+
+    # Iniciar API numa thread separada
+    api_thread = threading.Thread(target=run_api, daemon=True)
+    api_thread.start()
 
     # Inicializa o Uploader R2 e a Pool de Threads
     uploader = R2Uploader(
