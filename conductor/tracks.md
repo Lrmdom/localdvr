@@ -6,3 +6,6 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 - [~] **Track: Implement RTSP Recorder Service**
   *Link: [./tracks/rtsp_recorder_20260806/](./tracks/rtsp_recorder_20260806/)*
+
+- [ ] **Track: Video Viewer and Event Client**
+  *Link: [./tracks/video_viewer_20260809/](./tracks/video_viewer_20260809/)*
