@@ -56,6 +56,28 @@ class R2Uploader:
         except (BotoCoreError, ClientError) as e:
             logger.error(f"Erro ao enviar ficheiro {local_file_path} para o R2: {str(e)}")
             return False
-        except Exception as e:
-            logger.error(f"Erro inesperado durante upload/limpeza: {str(e)}")
-            return False
+    def list_objects(self, prefix: str):
+        """Lista objetos no bucket com um prefixo específico."""
+        try:
+            logger.info(f"A listar R2 com prefixo: {prefix}")
+            response = self.s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=prefix)
+            contents = response.get("Contents", [])
+            logger.info(f"Encontrados {len(contents)} objetos.")
+            return contents
+        except ClientError as e:
+            logger.error(f"Erro ao listar objetos em {prefix}: {str(e)}")
+            return []
+
+    def generate_presigned_url(self, object_key: str, expiration: int = 3600):
+        """Gera URL pré-assinada para acesso temporário ao objeto."""
+        try:
+            url = self.s3_client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self.bucket_name, "Key": object_key},
+                ExpiresIn=expiration
+            )
+            return url
+        except ClientError as e:
+            logger.error(f"Erro ao gerar URL para {object_key}: {str(e)}")
+            return None
+

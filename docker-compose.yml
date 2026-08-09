@@ -1,4 +1,37 @@
 services:
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: localdvr-mqtt
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    container_name: frigate
+    privileged: true
+    restart: unless-stopped
+    shm_size: "64mb" # Update for higher resolution cameras
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128 # For hardware acceleration (Intel)
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./config/frigate.yml:/config/config.yml
+      - ./media/frigate:/media/frigate
+      - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
+    ports:
+      - "5050:5000"
+      - "8556:8554" # RTSP feeds (alterado para evitar conflito com go2rtc externo)
+      - "8557:8555/tcp" # WebRTC over tcp
+      - "8557:8555/udp" # WebRTC over udp
+    depends_on:
+      - mqtt
+
   recorder:
     build: .
     container_name: localdvr-recorder
@@ -8,6 +41,16 @@ services:
       - .env
     volumes:
       - temp_data:/app/temp
+    depends_on:
+      - mqtt
+
+  go2rtc:
+    image: alexxit/go2rtc:latest
+    container_name: go2rtc
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./config/go2rtc.yaml:/config/go2rtc.yaml
 
 volumes:
   temp_data:

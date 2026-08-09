@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     TEMP_STORAGE_PATH: str = "./temp_recordings"
     LOG_LEVEL: str = "INFO"
     CAMERAS_RAW: str = Field(alias="CAMERAS", default="[]")
+    
+    # MQTT & Frigate
+    MQTT_HOST: str = "localhost" # 'mqtt' se rodar dentro do container na mesma rede
+    MQTT_PORT: int = 1883
+    FRIGATE_URL: str = "http://localhost:5050" # 'http://frigate:5000' se via docker
 
     @property
     def r2_endpoint_url(self) -> str:
