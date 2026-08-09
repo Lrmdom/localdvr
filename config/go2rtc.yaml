@@ -6,4 +6,4 @@ streams:
 
   # LSC Rotativa - Via Tuya Smart (cloud bridge)
   # OBRIGATÓRIO: Substituir EMAIL, PASSWORD, DEVICE_ID pelo que o painel go2rtc gera (Add -> Tuya)
-  lsc_rotativa: tuya://lmatiasdomingos@gmail.com:Licassss5151*@bf782c34ddc717cf86pcv4@192.168.1.72/live/ch0?region=EU
+  lsc_rotativa: "tuya://protect-eu.ismartlife.me?email=lmatiasdomingos@gmail.com&password=Licassss5151*&device_id=bfc84985bcdaac0027hxjq"
