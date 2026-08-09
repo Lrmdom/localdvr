@@ -39,7 +39,8 @@ cameras:
   lsc_rotativa:
     ffmpeg:
       inputs:
-        - path: rtsp://CbFsCQhTp1:Licassss5151@192.168.1.72:554/live/ch0
+        # Stream via go2rtc (Tuya bridge) - go2rtc corre em host network
+        - path: rtsp://go2rtc:8554/lsc_rotativa
           roles:
             - detect
             - record
