@@ -28,19 +28,23 @@ class FrigateListener:
         else:
             logger.error(f"Falha ao conectar ao MQTT. Código de erro: {rc}")
 
-    def download_and_upload_event(self, event_id: str, camera_name: str, label: str):
-        logger.info(f"A descarregar evento {event_id} ({label}) da câmara {camera_name}")
+    def download_and_upload_resource(self, event_id: str, camera_name: str, label: str, resource_type: str):
+        """
+        resource_type pode ser 'clip' ou 'snapshot'
+        """
+        logger.info(f"A descarregar {resource_type} do evento {event_id} ({label}) da câmara {camera_name}")
+        
+        extension = "mp4" if resource_type == "clip" else "jpg"
+        url_suffix = "clip.mp4" if resource_type == "clip" else "snapshot.jpg"
+        
         try:
-            # Frigate API url for the clip
-            clip_url = f"{settings.FRIGATE_URL}/api/events/{event_id}/clip.mp4"
-            response = requests.get(clip_url, stream=True, timeout=30)
+            resource_url = f"{settings.FRIGATE_URL}/api/events/{event_id}/{url_suffix}"
+            response = requests.get(resource_url, stream=True, timeout=30)
             
             if response.status_code == 200:
                 timestamp = datetime.now().strftime("%H%M%S")
-                # Format: event_{label}_{timestamp}.mp4
-                filename = f"event_{label}_{timestamp}.mp4"
+                filename = f"event_{label}_{timestamp}_{resource_type}.{extension}"
                 
-                # Make sure camera dir exists
                 cam_dir = os.path.join(self.temp_dir, camera_name)
                 os.makedirs(cam_dir, exist_ok=True)
                 
@@ -49,12 +53,12 @@ class FrigateListener:
                     for chunk in response.iter_content(chunk_size=8192):
                         f.write(chunk)
                 
-                logger.info(f"Download concluído: {local_path}. A iniciar upload R2...")
+                logger.info(f"Download de {resource_type} concluído: {local_path}. A iniciar upload R2...")
                 self.uploader.upload_and_cleanup(local_path, camera_name)
             else:
-                logger.error(f"Erro ao obter clip do Frigate. Status code: {response.status_code}")
+                logger.error(f"Erro ao obter {resource_type} do Frigate. Status code: {response.status_code}")
         except Exception as e:
-            logger.error(f"Exceção ao processar evento {event_id}: {str(e)}")
+            logger.error(f"Exceção ao processar {resource_type} do evento {event_id}: {str(e)}")
 
     def on_message(self, client, userdata, msg):
         try:
@@ -62,16 +66,24 @@ class FrigateListener:
             event_type = payload.get("type")
             after = payload.get("after", {})
             
-            # Só queremos processar quando o evento termina e o vídeo está guardado
-            if event_type == "end" and after.get("has_clip"):
+            # Só queremos processar quando o evento termina
+            if event_type == "end":
                 event_id = after.get("id")
                 camera = after.get("camera")
                 label = after.get("label")
+                has_clip = after.get("has_clip", False)
+                has_snapshot = after.get("has_snapshot", False)
                 
-                logger.info(f"Novo evento finalizado do Frigate detectado: {event_id} - {label}")
+                logger.info(f"Evento finalizado detetado: {event_id} - {label} (Clip: {has_clip}, Snapshot: {has_snapshot})")
                 
-                # Descarrega e faz upload no background para não bloquear o loop MQTT
-                self.executor.submit(self.download_and_upload_event, event_id, camera, label)
+                # Descarrega Clip se existir
+                if has_clip:
+                    self.executor.submit(self.download_and_upload_resource, event_id, camera, label, "clip")
+                
+                # Descarrega Snapshot se existir e for uma pessoa (como pedido pelo utilizador)
+                # Ou se calhar queremos snapshot para tudo? O utilizador mencionou "em que aparecem pessoas".
+                if has_snapshot and label == "person":
+                    self.executor.submit(self.download_and_upload_resource, event_id, camera, label, "snapshot")
                 
         except json.JSONDecodeError:
             pass

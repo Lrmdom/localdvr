@@ -1,5 +1,6 @@
 import os
 import logging
+import mimetypes
 from datetime import datetime
 import boto3
 from botocore.config import Config
@@ -27,7 +28,7 @@ class R2Uploader:
         )
 
     def upload_and_cleanup(self, local_file_path: str, camera_name: str) -> bool:
-        """Envia o ficheiro MP4 para o R2 com chave estruturada por data e remove o ficheiro local."""
+        """Envia o ficheiro para o R2 com chave estruturada por data e remove o ficheiro local."""
         if not os.path.exists(local_file_path):
             logger.error(f"Ficheiro não encontrado para upload: {local_file_path}")
             return False
@@ -35,16 +36,21 @@ class R2Uploader:
         filename = os.path.basename(local_file_path)
         now = datetime.now()
         
-        # Estrutura no Bucket: cameras/<nome>/YYYY/MM/DD/video_HHMMSS.mp4
+        # Estrutura no Bucket: cameras/<nome>/YYYY/MM/DD/filename
         r2_key = f"cameras/{camera_name}/{now.strftime('%Y/%m/%d')}/{filename}"
 
+        # Determinar o Content-Type
+        content_type, _ = mimetypes.guess_type(local_file_path)
+        if not content_type:
+            content_type = "application/octet-stream"
+
         try:
-            logger.info(f"A iniciar upload -> R2: {r2_key}")
+            logger.info(f"A iniciar upload ({content_type}) -> R2: {r2_key}")
             self.s3_client.upload_file(
                 Filename=local_file_path,
                 Bucket=self.bucket_name,
                 Key=r2_key,
-                ExtraArgs={"ContentType": "video/mp4"}
+                ExtraArgs={"ContentType": content_type}
             )
             logger.info(f"Upload concluído com sucesso: {r2_key}")
 
