@@ -1,6 +1,9 @@
-# Configuração base go2rtc
-# Adicionar streams RTSP em 'streams'
+# Configuração go2rtc com integração Tuya para câmara LSC
+
 streams:
-  # camera_name: rtsp://user:pass@ip:port/path
-  # Exemplo:
-  lsc_rotativa: rtsp://CbFsCQhTp1:Licassss5151@192.168.1.72:554/live/ch0
+  # TP-Link Exterior - RTSP direto (local)
+  tplink_exterior: rtsp://Licass:Licassss5151@192.168.1.65:554/stream1
+
+  # LSC Rotativa - Via Tuya Smart (cloud bridge)
+  # OBRIGATÓRIO: Substituir EMAIL, PASSWORD, DEVICE_ID pelo que o painel go2rtc gera (Add -> Tuya)
+  lsc_rotativa: tuya://lmatiasdomingos@gmail.com:Licassss5151*@bf782c34ddc717cf86pcv4@192.168.1.72/live/ch0?region=EU
