@@ -52,14 +52,30 @@ async def get_videos(camera: str, date: str = Query(..., description="YYYY-MM-DD
         label = "video"
         time_part = ""
         
-        # Parse old format: video_HHMMSS.mp4 or new format: event_{label}_{timestamp}.mp4
+        # Parse formats:
+        # 1. video_HHMMSS.mp4 (old)
+        # 2. event_{label}_{timestamp}.mp4 (medium)
+        # 3. event_{label}_{timestamp}_{type}.{ext} (new)
+        
+        file_ext = filename.split(".")[-1]
+        resource_type = "video" if file_ext == "mp4" else "snapshot"
+        
         if filename.startswith("event_"):
             parts = filename.split("_")
-            if len(parts) >= 3:
+            if len(parts) >= 4:
+                # Format 3: event_{label}_{timestamp}_{type}.{ext}
                 label = parts[1]
-                time_part = parts[-1].replace(".mp4", "")
+                time_part = parts[2]
+                resource_type = parts[3].split(".")[0]
+            elif len(parts) >= 3:
+                # Format 2: event_{label}_{timestamp}.mp4
+                label = parts[1]
+                time_part = parts[2].split(".")[0]
+            else:
+                time_part = filename.replace(f".{file_ext}", "")
         else:
-            time_part = filename.split("_")[-1].replace(".mp4", "")
+            # Format 1: video_HHMMSS.mp4
+            time_part = filename.split("_")[-1].replace(f".{file_ext}", "")
             
         if len(time_part) == 6:
             formatted_time = f"{time_part[:2]}:{time_part[2:4]}:{time_part[4:]}"
@@ -70,6 +86,7 @@ async def get_videos(camera: str, date: str = Query(..., description="YYYY-MM-DD
             "id": key,
             "filename": filename,
             "label": label,
+            "type": resource_type,
             "time": formatted_time,
             "timestamp": f"{date}T{formatted_time}",
             "url": uploader.generate_presigned_url(key),
