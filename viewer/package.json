@@ -20,7 +20,8 @@
     "@vitejs/plugin-react": "^6.0.5",
     "oxlint": "^1.75.0",
     "typescript": "~6.0.2",
-    "vite": "^8.2.1"
+    "vite": "^8.2.1",
+    "vite-plugin-pwa": "^1.3.0"
   },
   "description": "This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.",
   "main": "index.js",

@@ -6,14 +6,16 @@ import paho.mqtt.client as mqtt
 from concurrent.futures import ThreadPoolExecutor
 from src.config import settings
 from src.r2_uploader import R2Uploader
+from src.notifications import NotificationManager
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 class FrigateListener:
-    def __init__(self, uploader: R2Uploader, executor: ThreadPoolExecutor):
+    def __init__(self, uploader: R2Uploader, executor: ThreadPoolExecutor, notif_manager: NotificationManager = None):
         self.uploader = uploader
         self.executor = executor
+        self.notif_manager = notif_manager
         self.mqtt_client = mqtt.Client()
         self.mqtt_client.on_connect = self.on_connect
         self.mqtt_client.on_message = self.on_message
@@ -56,6 +58,15 @@ class FrigateListener:
                 
                 logger.info(f"Download de {resource_type} concluído: {local_path}. A iniciar upload R2...")
                 self.uploader.upload_and_cleanup(local_path, camera_name)
+                
+                # Send push notification if manager is present and it's a clip
+                if self.notif_manager and resource_type == "clip":
+                    self.notif_manager.send_notification(
+                        title=f"Evento na câmara {camera_name}",
+                        body=f"Detetado: {label}",
+                        data={"url": f"/viewer?camera={camera_name}&event={event_id}"}
+                    )
+                
             else:
                 logger.error(f"Erro ao obter {resource_type} do Frigate. Status code: {response.status_code}")
         except Exception as e:

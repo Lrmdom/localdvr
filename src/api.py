@@ -1,16 +1,18 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import logging
 import os
 from src.config import settings
 from src.r2_uploader import R2Uploader
+from src.notifications import NotificationManager
 
 # Configuração de logs
 logging.basicConfig(level=settings.LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="LocalDVR Viewer API")
+notif_manager = NotificationManager()
 
 # CORS para desenvolvimento
 app.add_middleware(
@@ -94,6 +96,17 @@ async def get_videos(camera: str, date: str = Query(..., description="YYYY-MM-DD
         })
     
     return sorted(videos, key=lambda x: x["timestamp"])
+
+@app.get("/api/notifications/vapid-public-key")
+async def get_vapid_key():
+    if not notif_manager.vapid_public_key:
+        raise HTTPException(status_code=404, detail="VAPID key not configured")
+    return {"publicKey": notif_manager.vapid_public_key}
+
+@app.post("/api/notifications/subscribe")
+async def subscribe(subscription: dict = Body(...)):
+    notif_manager.save_subscription(subscription)
+    return {"status": "ok"}
 
 # Servir Frontend (Montado por último para ser a rota catch-all)
 viewer_dist = os.path.join(os.path.dirname(__file__), "..", "viewer", "dist")
