@@ -48,6 +48,23 @@ services:
     depends_on:
       - mqtt
 
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: localdvr-tailscale
+    restart: unless-stopped
+    network_mode: host
+    hostname: localdvr-server
+    environment:
+      - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_EXTRA_ARGS=--advertise-routes=192.168.1.0/24 # Altera para a tua gama de IP local (ex: 192.168.1.0/24 ou 192.168.0.0/24)
+    volumes:
+      - tailscale_data:/var/lib/tailscale
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - net_raw
+
   go2rtc:
     image: alexxit/go2rtc:latest
     container_name: go2rtc
@@ -60,5 +77,18 @@ services:
     volumes:
       - ./config/go2rtc.yaml:/config/go2rtc.yaml
 
+  viewer:
+    image: node:20-slim
+    container_name: localdvr-viewer
+    working_dir: /app
+    volumes:
+      - ./viewer:/app
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - recorder
+
 volumes:
   temp_data:
+  tailscale_data:

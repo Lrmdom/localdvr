@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { CameraSelector } from './components/CameraSelector'
 import { VideoPlayer } from './components/VideoPlayer'
 import { Timeline } from './components/Timeline'
+import { getDetectionColor } from './utils/colors'
 
 function App() {
   const [cameras, setCameras] = useState<string[]>([])
@@ -45,7 +46,7 @@ function App() {
                     background: selectedVideoUrl === v.url ? 'var(--accent-color)' : 'var(--panel-bg)',
                     color: 'white',
                     border: '1px solid',
-                    borderColor: v.label === 'video' ? 'transparent' : '#ff9800',
+                    borderColor: getDetectionColor(v.label),
                     borderRadius: '4px',
                     cursor: 'pointer',
                     display: 'flex',
@@ -56,7 +57,7 @@ function App() {
                   <span style={{ fontWeight: 'bold' }}>
                     {v.label === 'video' ? 'Gravação' : `Deteção: ${v.label.toUpperCase()}`}
                   </span>
-                  <span>{v.time}</span>
+                  <span>{new Date(v.timestamp).toLocaleTimeString()}</span>
                 </button>
               ))}
             </div>
