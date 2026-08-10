@@ -12,7 +12,9 @@ export const Timeline = ({ videos, onSelect, currentUrl }: {
             onClick={() => onSelect(v.url)}
             style={{ 
               width: '10px', 
-              background: currentUrl === v.url ? 'var(--accent-color)' : '#555',
+              background: currentUrl === v.url 
+                ? 'var(--accent-color)' 
+                : (v.label.toLowerCase() === 'person' ? 'orange' : v.label.toLowerCase() === 'dog' ? 'blue' : '#555'),
               cursor: 'pointer',
               height: '100%'
             }}
