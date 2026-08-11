@@ -53,34 +53,52 @@ services:
     container_name: localdvr-tailscale
     restart: unless-stopped
     hostname: localdvr-server
-    ports:
-      - "443:443"
     environment:
       - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
       - TS_STATE_DIR=/var/lib/tailscale
     volumes:
       - tailscale_data:/var/lib/tailscale
+      - ./config/tailscale:/config
       - /dev/net/tun:/dev/net/tun
+      - /var/run/tailscale:/var/run/tailscale
     cap_add:
       - net_admin
       - net_raw
     command: >
       /bin/sh -c "tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock & 
       sleep 5 && 
-      tailscale up --authkey=$${TS_AUTHKEY} --reset --hostname=localdvr-server && 
-      tailscale serve --https=443 http://caddy:80 && 
+      tailscale up --authkey=$${TS_AUTHKEY} --hostname=localdvr-server --reset && 
       tail -f /dev/null"
+    healthcheck:
+      test: ["CMD", "tailscale", "--socket=/var/run/tailscale/tailscaled.sock", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: localdvr-cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token eyJhIjoiMDFlOTNiZTgzZGQwYWU4NzMwYzI0OTg2YWYyZjc4ZGEiLCJ0IjoiNzMyNTNkODktZjcyOS00OTA0LWI5ZjUtMjA4ZjExYzJmNzA0IiwicyI6IlltWmhNekF4WmpZdE56VmtOUzAwWXpJNUxXRTVZak10WTJZNE9UZzVaV0l6T0RaayJ9
+    depends_on:
+      caddy:
+        condition: service_started
 
   caddy:
     image: caddy:latest
     container_name: localdvr-caddy
     restart: unless-stopped
+    ports:
+      - "80:80"
+      - "81:81"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - caddy_data:/data
     depends_on:
-      - recorder
-      - tailscale
+      viewer:
+        condition: service_started
+      frigate:
+        condition: service_started
 
   go2rtc:
     image: alexxit/go2rtc:latest
