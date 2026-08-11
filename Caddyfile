@@ -1,11 +1,21 @@
 :80 {
-	# Proxy para o frontend React/Vite
-	handle /* {
-		reverse_proxy viewer:5173
-	}
-
-	# Proxy para a API Python/FastAPI
+	# 1. API do teu gravador/backend Python
 	handle /api/* {
 		reverse_proxy recorder:8000
+	}
+
+	# 2. Interface do Frigate
+	handle_path /frigate* {
+		reverse_proxy frigate:5000
+	}
+
+	# 3. Streamings go2rtc / WebRTC
+	handle_path /live* {
+		reverse_proxy go2rtc:1984
+	}
+
+	# 4. Frontend React / Viewer
+	handle /* {
+		reverse_proxy viewer:5173
 	}
 }

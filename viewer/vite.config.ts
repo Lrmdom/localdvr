@@ -32,12 +32,12 @@ export default defineConfig({
   ],
   server: {
     host: '0.0.0.0',
-    allowedHosts: true,
+    port: 5173,
+    allowedHosts: true, // Permite acessos via IP do Tailscale / Domínio externo
     proxy: {
       '/api': {
-        target: 'http://recorder:8000', // Nome do serviço no docker-compose
+        target: 'http://recorder:8000',
         changeOrigin: true,
-        secure: false,
       }
     }
   },
