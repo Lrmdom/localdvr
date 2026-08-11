@@ -65,6 +65,19 @@ services:
       - net_admin
       - net_raw
 
+  caddy:
+    image: caddy:latest
+    container_name: localdvr-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    depends_on:
+      - recorder
+
   go2rtc:
     image: alexxit/go2rtc:latest
     container_name: go2rtc
@@ -92,3 +105,4 @@ services:
 volumes:
   temp_data:
   tailscale_data:
+  caddy_data:

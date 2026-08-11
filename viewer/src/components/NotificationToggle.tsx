@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export const NotificationToggle = () => {
   const [permission, setPermission] = useState(Notification.permission);

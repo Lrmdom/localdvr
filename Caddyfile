@@ -1,0 +1,11 @@
+:80 {
+	# Proxy para o frontend React/Vite
+	handle /* {
+		reverse_proxy viewer:5173
+	}
+
+	# Proxy para a API Python/FastAPI
+	handle /api/* {
+		reverse_proxy recorder:8000
+	}
+}
