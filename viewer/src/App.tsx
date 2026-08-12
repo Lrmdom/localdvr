@@ -3,6 +3,7 @@ import { CameraSelector } from './components/CameraSelector'
 import { VideoPlayer } from './components/VideoPlayer'
 import { Timeline } from './components/Timeline'
 import { AccessManagement } from './components/AccessManagement'
+import { PTZControls } from './components/PTZControls'
 import { getDetectionColor } from './utils/colors'
 
 function App() {
@@ -11,7 +12,6 @@ function App() {
   const [videos, setVideos] = useState<any[]>([])
   const [selectedVideo, setSelectedVideo] = useState<any | null>(null)
   const [view, setView] = useState<'cameras' | 'access'>('cameras')
-  const [liveKey, setLiveKey] = useState(0)
 
   const selectedVideoUrl = selectedVideo?.url || null
 
@@ -29,7 +29,6 @@ function App() {
         .then(data => {
           setVideos(data)
           // Ao selecionar uma câmara, o Direto é o padrão
-          setLiveKey(prev => prev + 1)
           setSelectedVideo({
             id: 'live',
             type: 'live',
@@ -39,14 +38,6 @@ function App() {
         })
     }
   }, [selectedCamera])
-
-  const handleMove = (direction: string) => {
-    fetch('/api/ptz/move', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ camera: selectedCamera, direction })
-    })
-  }
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr', height: '100vh', gap: '1rem' }}>
@@ -96,35 +87,23 @@ function App() {
                   <VideoPlayer url={selectedVideoUrl} type={selectedVideo?.type} />
                   
                   {selectedCamera === 'lsc_rotativa' && selectedVideo?.type === 'live' && (
-                    <div style={{ 
-                      position: 'absolute', 
-                      bottom: '20px', 
-                      right: '20px', 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(3, 40px)', 
-                      gap: '5px',
-                      background: 'rgba(0,0,0,0.5)',
-                      padding: '10px',
-                      borderRadius: '8px'
-                    }}>
-                      <div />
-                      <button onClick={() => handleMove('up')} style={{ padding: '5px' }}>↑</button>
-                      <div />
-                      <button onClick={() => handleMove('left')} style={{ padding: '5px' }}>←</button>
-                      <button onClick={() => handleMove('stop')} style={{ padding: '5px', background: 'red' }}>■</button>
-                      <button onClick={() => handleMove('right')} style={{ padding: '5px' }}>→</button>
-                      <div />
-                      <button onClick={() => handleMove('down')} style={{ padding: '5px' }}>↓</button>
-                    </div>
+                    <PTZControls camera={selectedCamera} />
                   )}
                 </div>
-                <Timeline videos={videos} onSelect={(url) => setSelectedVideo(videos.find(v => v.url === url))} currentUrl={selectedVideoUrl} />
+                <Timeline 
+                  videos={videos} 
+                  onSelect={(video) => setSelectedVideo({ 
+                    ...video, 
+                    url: video.video_url || video.snapshot_url, 
+                    type: video.video_url ? 'video' : 'snapshot' 
+                  })} 
+                  currentUrl={selectedVideoUrl} 
+                />
                 
                 <h2>Eventos Inteligentes de Hoje:</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
                   <button 
                     onClick={() => {
-                      setLiveKey(prev => prev + 1)
                       setSelectedVideo({
                         id: 'live',
                         type: 'live',
@@ -151,37 +130,41 @@ function App() {
                     <span style={{ fontSize: '0.7rem' }}>Em Tempo Real</span>
                   </button>
 
-                  {videos.map(v => (
-                    <button 
-                      key={v.id} 
-                      onClick={() => setSelectedVideo(v)}
-                      style={{ 
-                        padding: '0.5rem', 
-                        background: selectedVideoUrl === v.url ? 'var(--accent-color)' : 'var(--panel-bg)',
-                        color: 'white',
-                        border: '1px solid',
-                        borderColor: getDetectionColor(v.label),
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        position: 'relative',
-                        minHeight: '100px',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      {v.type === 'snapshot' ? (
-                        <img src={v.url} alt="Thumbnail" style={{ width: '100%', height: '60px', objectFit: 'cover', borderRadius: '2px', marginBottom: '4px' }} />
-                      ) : (
-                        <div style={{ height: '60px', display: 'flex', alignItems: 'center' }}>🎬</div>
-                      )}
-                      <span style={{ fontWeight: 'bold', fontSize: '0.8rem' }}>
-                        {v.label === 'video' ? 'Gravação' : v.label.toUpperCase()}
-                      </span>
-                      <span style={{ fontSize: '0.7rem' }}>{v.time}</span>
-                    </button>
-                  ))}
+                  {videos.map(v => {
+                    const url = v.video_url || v.snapshot_url;
+                    const type = v.video_url ? 'video' : 'snapshot';
+                    return (
+                      <button 
+                        key={v.id} 
+                        onClick={() => setSelectedVideo({ ...v, url, type })}
+                        style={{ 
+                          padding: '0.5rem', 
+                          background: selectedVideoUrl === url ? 'var(--accent-color)' : 'var(--panel-bg)',
+                          color: 'white',
+                          border: '1px solid',
+                          borderColor: getDetectionColor(v.label),
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          position: 'relative',
+                          minHeight: '100px',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        {v.snapshot_url ? (
+                          <img src={v.snapshot_url} alt="Thumbnail" style={{ width: '100%', height: '60px', objectFit: 'cover', borderRadius: '2px', marginBottom: '4px' }} />
+                        ) : (
+                          <div style={{ height: '60px', display: 'flex', alignItems: 'center' }}>{v.video_url ? '🎬' : '📷'}</div>
+                        )}
+                        <span style={{ fontWeight: 'bold', fontSize: '0.8rem' }}>
+                          {v.label.toUpperCase()}
+                        </span>
+                        <span style={{ fontSize: '0.7rem' }}>{v.time}</span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
             )}
