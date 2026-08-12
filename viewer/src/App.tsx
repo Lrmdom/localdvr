@@ -11,7 +11,6 @@ function App() {
   const [videos, setVideos] = useState<any[]>([])
   const [selectedVideo, setSelectedVideo] = useState<any | null>(null)
   const [view, setView] = useState<'cameras' | 'access'>('cameras')
-  const [liveKey, setLiveKey] = useState(0)
 
   const selectedVideoUrl = selectedVideo?.url || null
 
@@ -29,7 +28,6 @@ function App() {
         .then(data => {
           setVideos(data)
           // Ao selecionar uma câmara, o Direto é o padrão
-          setLiveKey(prev => prev + 1)
           setSelectedVideo({
             id: 'live',
             type: 'live',
@@ -124,7 +122,6 @@ function App() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.5rem' }}>
                   <button 
                     onClick={() => {
-                      setLiveKey(prev => prev + 1)
                       setSelectedVideo({
                         id: 'live',
                         type: 'live',
