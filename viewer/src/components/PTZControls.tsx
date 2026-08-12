@@ -1,7 +1,11 @@
 export const PTZControls = ({ camera }: { camera: string }) => {
   const move = async (direction: string) => {
     try {
-      await fetch(`/api/ptz/move?camera=${camera}&direction=${direction}`, { method: 'POST' });
+      await fetch(`/api/ptz/move`, { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ camera, direction })
+      });
     } catch (err) {
       console.error('PTZ Error:', err);
     }
