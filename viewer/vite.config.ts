@@ -11,6 +11,8 @@ export default defineConfig({
         target: 'http://recorder:8000', // Nome do serviço no docker-compose
         changeOrigin: true,
         secure: false,
+        timeout: 0,
+        proxyTimeout: 0,
       }
     }
   },

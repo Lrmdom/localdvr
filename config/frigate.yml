@@ -23,6 +23,11 @@ record:
   detections:
     retain:
       days: 2
+snapshots:
+  enabled: true
+  retain:
+    default: 2
+
 cameras:
   tplink_exterior:
     ffmpeg:
@@ -39,7 +44,6 @@ cameras:
   lsc_rotativa:
     ffmpeg:
       inputs:
-        # Stream via go2rtc (Tuya bridge) - go2rtc corre em host network
         - path: rtsp://go2rtc:8554/lsc_rotativa
           roles:
             - detect
