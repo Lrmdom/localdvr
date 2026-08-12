@@ -13,7 +13,7 @@ services:
     container_name: frigate
     privileged: true
     restart: unless-stopped
-    shm_size: "64mb" # Update for higher resolution cameras
+    shm_size: "256mb" # Update for higher resolution cameras
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128 # For hardware acceleration (Intel)
     volumes:
@@ -41,12 +41,42 @@ services:
     environment:
       - MQTT_HOST=mqtt
       - FRIGATE_URL=http://frigate:5000
+      - TS_API_KEY=${TS_API_KEY}
+      - TAILNET=${TAILNET}
     env_file:
       - .env
     volumes:
       - temp_data:/app/temp
     depends_on:
       - mqtt
+
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: localdvr-tailscale
+    restart: unless-stopped
+    hostname: localdvr-server
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_SERVE_CONFIG=/config/serve.json
+    volumes:
+      - tailscale_data:/var/lib/tailscale
+      - ./config/tailscale:/config
+      - /dev/net/tun:/dev/net/tun
+    cap_add:
+      - net_admin
+      - net_raw
+    command: >
+      /bin/sh -c "
+      mkdir -p /var/run/tailscale &&
+      tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock &
+      sleep 5 &&
+      tailscale up --authkey=$${TS_AUTHKEY} --hostname=localdvr-server --reset &&
+      tailscale serve --bg --tcp 80 tcp://viewer:5173 &&
+      tailscale serve --bg --tcp 81 tcp://frigate:5000 &&
+      tailscale serve --bg --tcp 5000 tcp://frigate:5000 &&
+      tailscale serve --bg --tcp 8000 tcp://recorder:8000 &&
+      tail -f /dev/null"
 
   go2rtc:
     image: alexxit/go2rtc:latest
@@ -60,5 +90,18 @@ services:
     volumes:
       - ./config/go2rtc.yaml:/config/go2rtc.yaml
 
+  viewer:
+    image: node:20-slim
+    container_name: localdvr-viewer
+    working_dir: /app
+    volumes:
+      - ./viewer:/app
+    ports:
+      - "5173:5173"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - recorder
+
 volumes:
   temp_data:
+  tailscale_data:

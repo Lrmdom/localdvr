@@ -1,3 +1,5 @@
+import { getDetectionColor } from '../utils/colors';
+
 export const Timeline = ({ videos, onSelect, currentUrl }: { 
   videos: any[], 
   onSelect: (url: string) => void,
@@ -14,11 +16,11 @@ export const Timeline = ({ videos, onSelect, currentUrl }: {
               width: '10px', 
               background: currentUrl === v.url 
                 ? 'var(--accent-color)' 
-                : (v.label.toLowerCase() === 'person' ? 'orange' : v.label.toLowerCase() === 'dog' ? 'blue' : '#555'),
+                : getDetectionColor(v.label),
               cursor: 'pointer',
               height: '100%'
             }}
-            title={v.time}
+            title={new Date(v.timestamp).toLocaleTimeString()}
           />
         )
       })}

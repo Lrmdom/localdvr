@@ -28,7 +28,7 @@ class FrigateListener:
         else:
             logger.error(f"Falha ao conectar ao MQTT. Código de erro: {rc}")
 
-    def download_and_upload_resource(self, event_id: str, camera_name: str, label: str, resource_type: str):
+    def download_and_upload_resource(self, event_id: str, camera_name: str, label: str, resource_type: str, event_start_time: int):
         """
         resource_type pode ser 'clip' ou 'snapshot'
         """
@@ -42,7 +42,8 @@ class FrigateListener:
             response = requests.get(resource_url, stream=True, timeout=30)
             
             if response.status_code == 200:
-                timestamp = datetime.now().strftime("%H%M%S")
+                # Usa o start_time do evento, convertido para formato HHMMSS
+                timestamp = datetime.fromtimestamp(event_start_time).strftime("%H%M%S")
                 filename = f"event_{label}_{timestamp}_{resource_type}.{extension}"
                 
                 cam_dir = os.path.join(self.temp_dir, camera_name)
@@ -71,6 +72,7 @@ class FrigateListener:
                 event_id = after.get("id")
                 camera = after.get("camera")
                 label = after.get("label")
+                start_time = after.get("start_time")
                 has_clip = after.get("has_clip", False)
                 has_snapshot = after.get("has_snapshot", False)
                 
@@ -78,12 +80,11 @@ class FrigateListener:
                 
                 # Descarrega Clip se existir
                 if has_clip:
-                    self.executor.submit(self.download_and_upload_resource, event_id, camera, label, "clip")
+                    self.executor.submit(self.download_and_upload_resource, event_id, camera, label, "clip", start_time)
                 
-                # Descarrega Snapshot se existir e for uma pessoa (como pedido pelo utilizador)
-                # Ou se calhar queremos snapshot para tudo? O utilizador mencionou "em que aparecem pessoas".
-                if has_snapshot and label == "person":
-                    self.executor.submit(self.download_and_upload_resource, event_id, camera, label, "snapshot")
+                # Descarrega Snapshot se existir
+                if has_snapshot:
+                    self.executor.submit(self.download_and_upload_resource, event_id, camera, label, "snapshot", start_time)
                 
         except json.JSONDecodeError:
             pass

@@ -23,6 +23,11 @@ record:
   detections:
     retain:
       days: 2
+snapshots:
+  enabled: true
+  retain:
+    default: 2
+
 cameras:
   tplink_exterior:
     ffmpeg:
@@ -33,13 +38,19 @@ cameras:
             - record
     detect:
       enabled: true
-      width: 1920 # Defaulting to common resolution, Frigate will warn if it mismatches
+      width: 1920
       height: 1080
+    zones:
+      all:
+        coordinates: 0,0,1920,0,1920,1080,0,1080
+    snapshots:
+      enabled: true
+      timestamp: true
+      bounding_box: true
 
   lsc_rotativa:
     ffmpeg:
       inputs:
-        # Stream via go2rtc (Tuya bridge) - go2rtc corre em host network
         - path: rtsp://go2rtc:8554/lsc_rotativa
           roles:
             - detect
@@ -48,4 +59,11 @@ cameras:
       enabled: true
       width: 1920
       height: 1080
+    zones:
+      all:
+        coordinates: 0,0,1920,0,1920,1080,0,1080
+    snapshots:
+      enabled: true
+      timestamp: true
+      bounding_box: true
 version: 0.17-0
