@@ -52,18 +52,19 @@ services:
     image: tailscale/tailscale:latest
     container_name: localdvr-tailscale
     restart: unless-stopped
-    network_mode: host
     hostname: localdvr-server
     environment:
-      - TS_AUTHKEY=${TAILSCALE_AUTHKEY}
+      - TS_AUTHKEY=${TS_AUTHKEY}
       - TS_STATE_DIR=/var/lib/tailscale
-      - TS_EXTRA_ARGS=--advertise-routes=192.168.1.0/24 # Altera para a tua gama de IP local (ex: 192.168.1.0/24 ou 192.168.0.0/24)
+      - TS_SERVE_CONFIG=/config/serve.json
     volumes:
       - tailscale_data:/var/lib/tailscale
+      - ./config/tailscale:/config
       - /dev/net/tun:/dev/net/tun
     cap_add:
       - net_admin
       - net_raw
+    command: /bin/sh -c "mkdir -p /var/run/tailscale && tailscaled --state=/var/lib/tailscale/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock & sleep 5 && tailscale up --authkey=$${TS_AUTHKEY} --hostname=localdvr-server --reset && tailscale serve --bg --http 80 http://viewer:5173 && tailscale serve --bg --http 81 http://frigate:5000 && tail -f /dev/null"
 
   go2rtc:
     image: alexxit/go2rtc:latest

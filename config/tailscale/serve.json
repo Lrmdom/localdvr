@@ -1,0 +1,18 @@
+{
+  "Web": {
+    "${TS_CERT_DOMAIN}:80": {
+      "Handlers": {
+        "/": {
+          "Proxy": "http://viewer:5173"
+        }
+      }
+    },
+    "${TS_CERT_DOMAIN}:81": {
+      "Handlers": {
+        "/": {
+          "Proxy": "http://frigate:5000"
+        }
+      }
+    }
+  }
+}
