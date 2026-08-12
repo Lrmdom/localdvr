@@ -2,19 +2,20 @@ import { getDetectionColor } from '../utils/colors';
 
 export const Timeline = ({ videos, onSelect, currentUrl }: { 
   videos: any[], 
-  onSelect: (url: string) => void,
+  onSelect: (video: any) => void,
   currentUrl: string | null 
 }) => {
   return (
     <div style={{ display: 'flex', gap: '2px', height: '40px', background: 'var(--panel-bg)', padding: '5px' }}>
       {videos.map(v => {
+        const url = v.video_url || v.snapshot_url;
         return (
           <div 
             key={v.id}
-            onClick={() => onSelect(v.url)}
+            onClick={() => onSelect(v)}
             style={{ 
               width: '10px', 
-              background: currentUrl === v.url 
+              background: currentUrl === url 
                 ? 'var(--accent-color)' 
                 : getDetectionColor(v.label),
               cursor: 'pointer',

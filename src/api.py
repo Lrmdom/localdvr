@@ -47,56 +47,46 @@ async def get_videos(camera: str, date: str = Query(..., description="YYYY-MM-DD
     
     objects = uploader.list_objects(prefix)
     
-    videos = []
+    grouped_events = {}
+    
     for obj in objects:
         key = obj["Key"]
         filename = key.split("/")[-1]
         
-        label = "video"
-        time_part = ""
-        
-        # Parse formats:
-        # 1. video_HHMMSS.mp4 (old)
-        # 2. event_{label}_{timestamp}.mp4 (medium)
-        # 3. event_{label}_{timestamp}_{type}.{ext} (new)
-        
-        file_ext = filename.split(".")[-1]
-        resource_type = "video" if file_ext == "mp4" else "snapshot"
-        
-        if filename.startswith("event_"):
-            parts = filename.split("_")
-            if len(parts) >= 4:
-                # Format 3: event_{label}_{timestamp}_{type}.{ext}
-                label = parts[1]
-                time_part = parts[2]
-                resource_type = parts[3].split(".")[0]
-            elif len(parts) >= 3:
-                # Format 2: event_{label}_{timestamp}.mp4
-                label = parts[1]
-                time_part = parts[2].split(".")[0]
-            else:
-                time_part = filename.replace(f".{file_ext}", "")
-        else:
-            # Format 1: video_HHMMSS.mp4
-            time_part = filename.split("_")[-1].replace(f".{file_ext}", "")
+        # Parse filename to get group key
+        # Format: event_{label}_{timestamp}_{type}.{ext}
+        if not filename.startswith("event_"):
+            continue
             
-        if len(time_part) == 6:
+        parts = filename.split("_")
+        if len(parts) < 4:
+            continue
+            
+        label = parts[1]
+        time_part = parts[2]
+        resource_type = parts[3].split(".")[0]
+        event_key = f"{label}_{time_part}"
+        
+        if event_key not in grouped_events:
             formatted_time = f"{time_part[:2]}:{time_part[2:4]}:{time_part[4:]}"
-        else:
-            formatted_time = time_part # Fallback se falhar
+            grouped_events[event_key] = {
+                "id": event_key,
+                "label": label,
+                "time": formatted_time,
+                "timestamp": f"{date}T{formatted_time}",
+                "snapshot_url": None,
+                "video_url": None
+            }
+        
+        url = uploader.generate_presigned_url(key)
+        if resource_type == "snapshot":
+            grouped_events[event_key]["snapshot_url"] = url
+        elif resource_type == "clip":
+            grouped_events[event_key]["video_url"] = url
             
-        videos.append({
-            "id": key,
-            "filename": filename,
-            "label": label,
-            "type": resource_type,
-            "time": formatted_time,
-            "timestamp": f"{date}T{formatted_time}",
-            "url": uploader.generate_presigned_url(key),
-            "size": obj["Size"]
-        })
-    
-    return sorted(videos, key=lambda x: x["timestamp"])
+    # Converter para lista e ordenar
+    events = list(grouped_events.values())
+    return sorted(events, key=lambda x: x["timestamp"], reverse=True)
 
 @app.get("/api/access/status")
 async def get_access_status():
@@ -147,32 +137,62 @@ async def get_live_stream(camera: str):
 
     return StreamingResponse(stream_generator(), media_type="multipart/x-mixed-replace; boundary=frame")
 
+import tinytuya
+import os
+
 @app.post("/api/ptz/move")
-async def ptz_move(camera: str, direction: str):
+async def ptz_move(data: dict):
     """
-    direction: 'left', 'right', 'up', 'down', 'stop'
+    data: {"camera": str, "direction": str}
     """
-    import httpx
-    # Se for a lsc_rotativa, usamos o go2rtc diretamente via Tuya PTZ
-    if camera == "lsc_rotativa":
-        go2rtc_url = f"http://go2rtc:1984/api/streams"
-        params = {"src": camera, "ptz": direction.lower()}
-        async with httpx.AsyncClient() as client:
-            try:
-                res = await client.post(go2rtc_url, params=params)
-                return {"status": res.status_code, "detail": res.text}
-            except Exception as e:
-                return {"error": str(e)}
-    
-    # Fallback para o Frigate (ONVIF)
-    frigate_url = f"{settings.FRIGATE_URL}/api/{camera}/ptz/move"
+    logger.info(f"PTZ request received: {data}")
+    camera_name = data.get("camera")
+    direction = data.get("direction", "stop").lower()
+
+    if camera_name == "lsc_rotativa":
+        try:
+            # Inicializar câmara Tuya com OutletDevice
+            d = tinytuya.OutletDevice(
+                dev_id=os.getenv("LSC_DEVICE_ID"),
+                address=os.getenv("LSC_IP"),
+                local_key=os.getenv("LSC_LOCAL_KEY")
+            )
+            version = os.getenv("LSC_VERSION", "3.3")
+            d.set_version(float(version))
+            
+            # Garantir que o modo de privacidade está desativado (DP 105)
+            d.set_value(105, False)
+            
+            # Mapeamento DP 119
+            commands = {
+                "up": 0,
+                "right": 2,
+                "down": 4,
+                "left": 6
+            }
+            
+            if direction in commands:
+                # Enviar comando no DP 119
+                d.set_value(119, commands[direction])
+            
+            return {"status": 200, "detail": f"PTZ command {direction} sent to Tuya"}
+            
+        except Exception as e:
+            logger.error(f"Tuya error: {e}")
+            return {"status": 500, "error": str(e)}
+
+    # Fallback para o Frigate (ONVIF via API Frigate)
+    frigate_url = f"{settings.FRIGATE_URL}/api/{camera_name}/ptz/move"
     params = {"action": direction.upper()}
+    logger.info(f"Sending to Frigate: {frigate_url} with params {params}")
     async with httpx.AsyncClient() as client:
         try:
             res = await client.get(frigate_url, params=params)
+            logger.info(f"Frigate response: {res.status_code} {res.text}")
             return {"status": res.status_code, "detail": res.text}
         except Exception as e:
-            return {"error": str(e)}
+            logger.error(f"Error calling Frigate: {e}")
+            return {"status": 500, "error": str(e)}
 
 # Servir Frontend (Montado por último para ser a rota catch-all)
 viewer_dist = os.path.join(os.path.dirname(__file__), "..", "viewer", "dist")
