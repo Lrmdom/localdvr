@@ -82,8 +82,8 @@ class FrigateListener:
                 if has_clip:
                     self.executor.submit(self.download_and_upload_resource, event_id, camera, label, "clip", start_time)
                 
-                # Descarrega Snapshot se existir e for uma pessoa (como pedido pelo utilizador)
-                if has_snapshot and label == "person":
+                # Descarrega Snapshot se existir
+                if has_snapshot:
                     self.executor.submit(self.download_and_upload_resource, event_id, camera, label, "snapshot", start_time)
                 
         except json.JSONDecodeError:

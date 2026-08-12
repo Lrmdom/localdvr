@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     MQTT_HOST: str = "localhost" # 'mqtt' se rodar dentro do container na mesma rede
     MQTT_PORT: int = 1883
     FRIGATE_URL: str = "http://localhost:5050" # 'http://frigate:5000' se via docker
+    
+    # Tailscale
+    TS_API_KEY: str = ""
+    TAILNET: str = "" # ex: lmatiasdomingos.gmail.com.ts.net
 
     @property
     def r2_endpoint_url(self) -> str:
