@@ -103,4 +103,39 @@ class TailscaleAPI:
                 return []
             return response.json().get("shares", [])
 
+    async def list_invitations(self):
+        headers = await self._get_headers()
+        # Usa '-' para a tailnet do token OAuth
+        url = f"https://api.tailscale.com/api/v2/tailnet/-/invitations"
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(url, headers=headers)
+                if response.status_code != 200:
+                    logger.error(f"Erro ao listar convites Tailscale: {response.status_code} - {response.text}")
+                    return []
+                
+                data = response.json()
+                logger.info(f"Resposta Tailscale invitations: {data}")
+                return data.get("invitations", [])
+            except Exception as e:
+                logger.error(f"Exceção ao listar convites Tailscale: {str(e)}")
+                return []
+
+    async def list_users(self):
+        headers = await self._get_headers()
+        url = f"https://api.tailscale.com/api/v2/tailnet/-/users"
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(url, headers=headers)
+                if response.status_code != 200:
+                    logger.error(f"Erro ao listar utilizadores Tailscale: {response.status_code} - {response.text}")
+                    return []
+                
+                data = response.json()
+                logger.info(f"Resposta Tailscale users: {data}")
+                return data.get("users", [])
+            except Exception as e:
+                logger.error(f"Exceção ao listar utilizadores Tailscale: {str(e)}")
+                return []
+
 ts_api = TailscaleAPI()

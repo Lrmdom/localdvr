@@ -5,6 +5,9 @@ export const AccessManagement = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
+  const [users, setUsers] = useState<any[]>([])
+  const joinedUsers = users.filter(u => u.displayName || u.loginName)
+  const pendingUsers = users.filter(u => !u.displayName && !u.loginName)
 
   const fetchStatus = async () => {
     try {
@@ -16,8 +19,19 @@ export const AccessManagement = () => {
     }
   }
 
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch('/api/access/users')
+      const data = await res.json()
+      setUsers(data)
+    } catch (err) {
+      console.error('Erro ao buscar utilizadores', err)
+    }
+  }
+
   useEffect(() => {
     fetchStatus()
+    fetchUsers()
   }, [])
 
   const generateInvite = async () => {
@@ -95,7 +109,46 @@ export const AccessManagement = () => {
             )}
           </div>
 
-          <h3>Utilizadores com Acesso:</h3>
+          <h3>Utilizadores do Tailnet:</h3>
+          {users && users.length > 0 ? (
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              {users.map((user: any, idx: number) => {
+                const isPending = !user.displayName && !user.loginName;
+                const isOwner = user.role === 'owner';
+                const status = user.status || (isPending ? 'Pendente' : 'Ativo');
+
+                return (
+                  <li key={idx} style={{ 
+                    padding: '0.8rem', 
+                    borderBottom: '1px solid #444',
+                    background: isPending ? 'rgba(255,255,0,0.05)' : 'rgba(255,255,255,0.05)',
+                    marginBottom: '0.5rem',
+                    borderRadius: '4px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#fff' }}>
+                        {isPending ? '⏳ Convite Pendente' : (user.displayName || 'Utilizador')}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: isOwner ? '#f1c40f' : '#aaa', textTransform: 'uppercase' }}>
+                        {user.role}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#aaa', marginTop: '2px' }}>
+                      {user.loginName || `ID: ${user.id}`}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: user.currentlyConnected ? '#2ecc71' : '#5dade2', marginTop: '4px' }}>
+                      {user.currentlyConnected ? '🟢 Connected' : 
+                       user.lastSeen ? `Last seen: ${new Date(user.lastSeen).toLocaleString()}` : 'Status desconhecido'}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p style={{ color: '#888' }}>Sem utilizadores no Tailnet.</p>
+          )}
+
+          <h3>Partilhas de Dispositivo (Shares):</h3>
           {status.active_shares && status.active_shares.length > 0 ? (
             <ul style={{ listStyle: 'none', padding: 0 }}>
               {status.active_shares.map((share: any, idx: number) => (

@@ -98,11 +98,17 @@ async def get_access_status():
         return {"configured": False, "reason": "Dispositivo localdvr-server não encontrado no Tailscale"}
     
     shares = await ts_api.list_shares(device_id)
+    invitations = await ts_api.list_invitations()
     return {
         "configured": True,
         "device_id": device_id,
-        "active_shares": shares
+        "active_shares": shares,
+        "active_invitations": invitations
     }
+
+@app.get("/api/access/users")
+async def get_users():
+    return await ts_api.list_users()
 
 @app.post("/api/access/invite")
 async def create_invite():
