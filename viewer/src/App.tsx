@@ -40,19 +40,20 @@ function App() {
   }, [selectedCamera])
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr', height: '100vh', gap: '1rem' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--panel-bg)', borderRight: '1px solid #333' }}>
-        <nav style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="app-container">
+      <div className="sidebar">
+        <nav style={{ padding: '1rem', display: 'flex', flexDirection: 'row', gap: '0.5rem' }}>
           <button 
             onClick={() => setView('cameras')}
             style={{
-              padding: '0.8rem',
-              background: view === 'cameras' ? 'var(--accent-color)' : 'transparent',
+              padding: '1rem',
+              flex: 1,
+              background: view === 'cameras' ? 'var(--accent-color)' : '#444',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
               cursor: 'pointer',
-              textAlign: 'left'
+              fontWeight: 'bold'
             }}
           >
             📹 Câmaras
@@ -60,16 +61,17 @@ function App() {
           <button 
             onClick={() => setView('access')}
             style={{
-              padding: '0.8rem',
-              background: view === 'access' ? 'var(--accent-color)' : 'transparent',
+              padding: '1rem',
+              flex: 1,
+              background: view === 'access' ? 'var(--accent-color)' : '#444',
               color: 'white',
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '8px',
               cursor: 'pointer',
-              textAlign: 'left'
+              fontWeight: 'bold'
             }}
           >
-            🔑 Gestão de Acesso
+            🔑 Acesso
           </button>
         </nav>
         
