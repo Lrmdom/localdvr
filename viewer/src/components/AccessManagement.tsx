@@ -6,8 +6,6 @@ export const AccessManagement = () => {
   const [error, setError] = useState<string | null>(null)
   const [inviteUrl, setInviteUrl] = useState<string | null>(null)
   const [users, setUsers] = useState<any[]>([])
-  const joinedUsers = users.filter(u => u.displayName || u.loginName)
-  const pendingUsers = users.filter(u => !u.displayName && !u.loginName)
 
   const fetchStatus = async () => {
     try {
@@ -115,7 +113,6 @@ export const AccessManagement = () => {
               {users.map((user: any, idx: number) => {
                 const isPending = !user.displayName && !user.loginName;
                 const isOwner = user.role === 'owner';
-                const status = user.status || (isPending ? 'Pendente' : 'Ativo');
 
                 return (
                   <li key={idx} style={{ 

@@ -154,17 +154,19 @@ async def ptz_move(data: dict):
     logger.info(f"PTZ request received: {data}")
     camera_name = data.get("camera")
     direction = data.get("direction", "stop").lower()
+    
+    logger.info(f"Processing PTZ: camera='{camera_name}', direction='{direction}'")
 
     if camera_name == "lsc_rotativa":
+        logger.info("Matched camera 'lsc_rotativa'")
         try:
-            # Inicializar câmara Tuya com OutletDevice
+            # Inicializar câmara Tuya
             d = tinytuya.OutletDevice(
                 dev_id=os.getenv("LSC_DEVICE_ID"),
                 address=os.getenv("LSC_IP"),
                 local_key=os.getenv("LSC_LOCAL_KEY")
             )
-            version = os.getenv("LSC_VERSION", "3.3")
-            d.set_version(float(version))
+            d.set_version(float(os.getenv("LSC_VERSION", "3.3")))
             
             # Garantir que o modo de privacidade está desativado (DP 105)
             d.set_value(105, False)
@@ -172,20 +174,36 @@ async def ptz_move(data: dict):
             # Mapeamento DP 119
             commands = {
                 "up": 0,
+                "right_up": 1,
                 "right": 2,
+                "right_down": 3,
                 "down": 4,
-                "left": 6
+                "left_down": 5,
+                "left": 6,
+                "left_up": 7,
+                "stop": 8
             }
             
             if direction in commands:
-                # Enviar comando no DP 119
-                d.set_value(119, commands[direction])
+                logger.info(f"Sending PTZ command {direction.upper()} (DP 119, value: {commands[direction]})")
+                
+                response = d.set_value(119, commands[direction])
+                logger.info(f"Tuya PTZ Raw Response: {response}")
+                
+                if isinstance(response, dict) and response.get("Error"):
+                     logger.error(f"Tuya PTZ Error: {response}")
+                     return {"status": 500, "detail": f"Tuya error: {response.get('Error')}"}
+                
+                return {"status": 200, "detail": f"PTZ command {direction.upper()} sent"}
             
-            return {"status": 200, "detail": f"PTZ command {direction} sent to Tuya"}
+            logger.warning(f"Unknown direction: {direction}")
+            return {"status": 400, "detail": f"Unknown direction: {direction}"}
             
         except Exception as e:
-            logger.error(f"Tuya error: {e}")
-            return {"status": 500, "error": str(e)}
+            logger.error(f"Exception in PTZ move: {e}")
+            return {"status": 500, "detail": str(e)}
+    
+    logger.warning(f"Camera not matched: '{camera_name}'")
 
     # Fallback para o Frigate (ONVIF via API Frigate)
     frigate_url = f"{settings.FRIGATE_URL}/api/{camera_name}/ptz/move"
