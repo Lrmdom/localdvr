@@ -73,7 +73,7 @@ function App() {
           </button>
         </nav>
         
-        {view === 'cameras' && <CameraSelector cameras={cameras} onSelect={setSelectedCamera} />}
+        {view === 'cameras' && <CameraSelector cameras={cameras} onSelect={setSelectedCamera} selectedCamera={selectedCamera} />}
       </div>
 
       <main style={{ padding: '1rem', overflowY: 'auto' }}>
